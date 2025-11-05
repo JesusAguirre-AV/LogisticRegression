@@ -81,11 +81,31 @@ def varianceFunction(label, features, targets, mean):
 """Making a vector such that it returns the argmax for the weights vector needed in the weight update function
 for this we need the features related to their classifications in sets such that their probabilities are
 dependant on weights"""
-#TODO
+#TODO?
 
 """Here is the optimization function, not found in the reading for logistic regresion though it is in the slides,
 it seems to be meant to """
-#TODO
+#TODO?
 
-"""Functions for discrete values, in the case where Y is {y1, ..., yn} rather than a boolean, however a boolean is
-what we"""
+"""Functions for discrete values, in the case where Y is {y1, ..., yn} rather than a boolean"""
+
+"""The bayesRuleWGaussianMulti function predicts the probability distribution 
+of the target Y given features X (vector), the mean values, and variance (theta squared).
+This is the multiclass extension of the binary case using the softmax form."""
+def bayesRuleWGaussianMulti(features, means, variances, priors):
+    k_classes, n_features = means.shape
+    scores = np.zeros(k_classes)
+
+    for k in range(k_classes):
+        # Compute weight and bias for class k
+        w = means[k] / variances
+        w0 = np.log(priors[k]) - 0.5 * np.sum((means[k] ** 2) / variances)
+        scores[k] = w0 + np.sum(w * features)
+
+    # Softmax normalization for probabilities
+    exp_scores = np.exp(scores - np.max(scores))  # for numerical stability
+    probabilities = exp_scores / np.sum(exp_scores)
+
+    return probabilities
+
+#TODO weight updates using the bayesRuleMGaussianMulti
