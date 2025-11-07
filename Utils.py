@@ -108,4 +108,35 @@ def bayesRuleWGaussianMulti(features, means, variances, priors):
 
     return probabilities
 
-#TODO weight updates using the bayesRuleMGaussianMulti
+
+"""Weight update for multiclass logistic regression with L2 regularization.
+Updates the array of weights W based on prediction error and penalizes large weights
+to prevent overfitting. Takes features, targets, weights, learning rate, predictions,
+and regularization strength λ (lambda)."""
+def weight_update_multiclass(features, targets, weights, stepSize, LRprediction, regLambda):
+    """
+    features:    numpy array of shape (n_samples, n_features)
+    targets:     numpy array of shape (n_samples,)  -- integer class labels 0..K-1
+    weights:     numpy array of shape (K, n_features)
+    stepSize:    learning rate η
+    LRprediction:numpy array of shape (n_samples, K) -- predicted probabilities
+    regLambda:   regularization strength λ
+    """
+
+    n_samples, n_features = features.shape
+    n_classes = weights.shape[0]
+
+    # One-hot encode targets
+    one_hot = np.zeros((n_samples, n_classes))
+    one_hot[np.arange(n_samples), targets] = 1
+
+    # Error term (δ(Y = y_j) - P(Y = y_j | X, W))
+    error = one_hot - LRprediction  # shape: (n_samples, K)
+
+    # Gradient: sum over samples of X^l_i * error_lj
+    grad = error.T @ features  # shape: (K, n_features)
+
+    # Weight update rule with regularization
+    weights = weights + stepSize * grad - stepSize * regLambda * weights
+
+    return weights
