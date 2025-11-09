@@ -39,20 +39,20 @@ class LogisticRegressionMultiClass:
     def argmaxVector(self, fs):
         return np.argmax(self.predictProbabilitiesFromWeights(fs), axis=1)
 
-
+    """Transforms the given y into a one-hot vector (A vector with all 0's and 1 non-zero)"""
     def oneHot(self, y, K):
         Y = np.zeros((y.shape[0], K), dtype=float)
         Y[np.arange(y.shape[0]), y] = 1.0
         return Y
 
-
+    """Standardizes the feature to have mean=0 and sd=1"""
     def _stdFit(self, X):
         self.mean = X.mean(axis=0)
         self.sd = X.std(axis=0)
         self.sd[self.sd == 0] = 1.0
         return(X - self.mean) / self.sd
 
-
+    """Normalizes the feature"""
     def _stdApply(self, X):
         return (X - self.mean)/ self.sd
 
@@ -79,6 +79,8 @@ class LogisticRegressionMultiClass:
 
                 P = self.logitsAndSoftmax(Xb)
 
+                """******************************************* THIS IS WHERE I UPDATE THE WEIGHTS AND THE BIASES *******************************************
+                                   tHE """
                 B = Xb.shape[0]
                 diff = (P- Yb) / B
                 gradientWeights = diff.T @ Xb + self.regLambda * self.weights
@@ -86,6 +88,8 @@ class LogisticRegressionMultiClass:
 
                 self.weights -= self.stepSize * gradientWeights
                 self.bias -= self.stepSize * gradientBias
+                """*****************************************************************************************************************************************"""
+
         return self
 
 
