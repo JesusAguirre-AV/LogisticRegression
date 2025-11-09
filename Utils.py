@@ -81,7 +81,26 @@ def varianceFunction(label, features, targets, mean):
 """Making a vector such that it returns the argmax for the weights vector needed in the weight update function
 for this we need the features related to their classifications in sets such that their probabilities are
 dependant on weights"""
-#TODO?
+
+"""Logits calculation"""
+def logits(features, weights, biases=None):
+    if b is None:
+        b = np.zeros(weights.shape[0], dtype=float)
+        return( features @ weights.T + b )
+
+"""Softmax calculation (turning logits into valid probabilities)"""
+def softmax(ls):
+    Zs = Z - np.max(Z, axis=1, keepdimensions=True)
+    E = np.exp(Zs)
+    return E/np.sum(E, axis=1, keepdimensions=True)
+
+"""Forward pass to get probabilities for weight_update"""
+def predictProbabilitiesFromWeights(features, weights, biases=None):
+    return softmax(logits(features, weights, biases))
+
+"""argmax vector calculation"""
+def argmaxVector(features, weights, biases=None):
+    return np.argmax(predictProbabilitiesFromWeights(features, weights, biases), axis=1)
 
 """Here is the optimization function, not found in the reading for logistic regresion though it is in the slides,
 it seems to be meant to """

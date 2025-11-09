@@ -9,6 +9,7 @@ from sklearn.metrics import accuracy_score
 from database import FeatureConfig, build_train_dataframe, build_test_dataframe, \
     save_database_artifacts
 from Utils import train_svm_rbf, train_random_forest, train_gaussian_nb, train_gradient_boost
+from LogisticRegression import LogisticRegressionMultiClass
 
 #Figured out way to have file path work
 ROOT = Path(__file__).resolve().parent
@@ -16,18 +17,50 @@ RAW = ROOT / "data" / "raw"
 PROC = ROOT / "data" / "processed"
 
 
+"""**************************************************************** Parameters ***************************************************************************"""
+mfcc = True
+fcc_delta=False
+chroma=True
+spectral_contrast=True
+zcr=True
+spectral_centroid=True
+spectral_bandwidth=True
+spectral_rolloff=True
+rms=True
+tempo=False
+n_mfcc=20
+aggregation="mean_std"
+
+#How far we move
+logistRegressStepSize = 0.1
+#How many iterations of training
+logistRegressEpochs = 300
+"""*******************************************************************************************************************************************************"""
+
+
 #Change these paramters to try a fuckton of different things,
 def build_database():
+    print("Configuring features...")
     cfg = FeatureConfig(
-        mfcc=True, mfcc_delta=False, chroma=True,
-        spectral_contrast=True, zcr=True,
-        spectral_centroid=True, spectral_bandwidth=True,
-        spectral_rolloff=True, rms=True, tempo=False,
-        n_mfcc=20, aggregation="mean_std",
+        mfcc=True,
+        mfcc_delta=False,
+        chroma=True,
+        spectral_contrast=True,
+        zcr=True,
+        spectral_centroid=True,
+        spectral_bandwidth=True,
+        spectral_rolloff=True,
+        rms=True, tempo=False,
+        n_mfcc=20,
+        aggregation="mean_std",
     )
+    print("Features configured, building training dataframe")
     df_tr = build_train_dataframe(str(RAW / "train"), cfg)
+    print("Training dataframe built, building test dataframe")
     df_te = build_test_dataframe(str(RAW / "test"), cfg)
+    print("Test dataframe built, saving database artifacts")
     save_database_artifacts(df_tr, df_te, str(PROC))
+    print("Done")
     return df_tr, df_te
 
 
@@ -46,10 +79,14 @@ def train_and_compare(df_tr: pd.DataFrame):
     rf  = train_random_forest(Xtr, ytr)
     gnb = train_gaussian_nb(Xtr, ytr)
 
+    lr = LogisticRegressionMultiClass(logistRegressStepSize, LogisticRegressEpochs)
+    lr.train(Xtr, ytr)
+
     pred_gbm = gbm.predict(Xte); acc_gbm = accuracy_score(yte, pred_gbm)
     pred_svm = svm.predict(Xte); acc_svm = accuracy_score(yte, pred_svm)
     pred_rf  = rf.predict(Xte);  acc_rf  = accuracy_score(yte, pred_rf)
     pred_gnb = gnb.predict(Xte); acc_gnb = accuracy_score(yte, pred_gnb)
+    pred_lr = lr.predict(Xte)
 
     print("\nAccuracies")
     print(f"GBM                : {acc_gbm:.4f}")
@@ -72,7 +109,7 @@ def train_and_compare(df_tr: pd.DataFrame):
     elif best_name == "gbm": best_model = ("gbm", gbm)
     else:                              best_model = ("gnb", gnb)
 
-    print("\Best model on validation", best_name)
+    print("Best model on validation", best_name)
     return best_name, best_model, le
 
 
