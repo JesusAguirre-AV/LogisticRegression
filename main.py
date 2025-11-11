@@ -37,23 +37,24 @@ logistRegressStepSize = 0.3
 logistRegressEpochs = 200
 """*******************************************************************************************************************************************************"""
 
-# Change these paramters to try a fuckton of different things,
 def build_database():
     """
-    :return:
+    Builds a database for the features, so the models can train on structured data.
+    :return: A tuple (df_tr, df_te) containing the training and test data frames.
     """
     print("Configuring features...")
     cfg = FeatureConfig(
-        mfcc=True,
-        mfcc_delta=False,
-        chroma=True,
-        spectral_contrast=True,
-        zcr=True,
-        spectral_centroid=True,
-        spectral_bandwidth=True,
+        mfcc=False,
+        mfcc_delta=True,
+        chroma=False,
+        spectral_contrast=False,
+        zcr=False,
+        spectral_centroid=False,
+        spectral_bandwidth=False,
         spectral_rolloff=True,
-        rms=True, tempo=False,
-        n_mfcc=20,
+        rms=True,
+        tempo=False,
+        n_mfcc=5,
         aggregation="mean_std",
     )
     print("Features configured, building training dataframe")
@@ -70,8 +71,8 @@ def train_and_compare(df_tr: pd.DataFrame):
     """
     This trains each of the different models, including: gradient boosting, support vector machines, random forest,
      Gaussian Naive Bayes, and logistic regression.
-    :param df_tr:
-    :return:
+    :param df_tr: Training data frame
+    :return: the name of the best model, best model info, label encoder
     """
     X = df_tr.drop(columns=["label", "path"]).to_numpy(dtype=float)
     y_text = df_tr["label"].astype(str).to_numpy()
@@ -136,7 +137,7 @@ def train_and_compare(df_tr: pd.DataFrame):
     print(f"GaussianNB         : {training_times['gnb']:.4f}")
     print(f"LogisticRegression : {training_times['lr']:.4f}")
 
-
+    # commented out to just get logistic regression
     results = {
         # "gbm": acc_gbm,
         # "svm_rbf": acc_svm,
@@ -167,12 +168,11 @@ def train_and_compare(df_tr: pd.DataFrame):
 
 def make_kaggle_submission(df_te: pd.DataFrame, model_info, label_encoder, out_csv: Path):
     """
-
-    :param df_te:
-    :param model_info:
-    :param label_encoder:
-    :param out_csv:
-    :return:
+    Creates a CSV for Kaggle submission
+    :param df_te: testing data frame
+    :param model_info: information about the model for training
+    :param label_encoder: converts numeric labels back to class names
+    :param out_csv: Path to CSV
     """
     tag, model = model_info
     X_test = df_te.drop(columns=["path"]).to_numpy(dtype=float)
@@ -189,10 +189,9 @@ def make_kaggle_submission(df_te: pd.DataFrame, model_info, label_encoder, out_c
 
 if __name__ == "__main__":
     """
-
+    Builds database and run model testing/training
     """
     # build database edit function build database for different features
-    # (I have no idea what a lot of those features do was just built into a libary)
     print("Starting to build database")
     train_df, test_df = build_database()
 
@@ -208,7 +207,7 @@ if __name__ == "__main__":
     # Use full training dataset for final model
     X_full = train_df.drop(columns=["label", "path"]).to_numpy(dtype=float)
     y_full_text = train_df["label"].astype(str).to_numpy()
-    # We must use the *same* label encoder, so we'll re-fit it
+    # must use the *same* label encoder, so we'll re-fit it
     le_full = LabelEncoder().fit(y_full_text)
     y_full = le_full.transform(y_full_text)
 
