@@ -5,40 +5,39 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score
+import time
 
 from database import FeatureConfig, build_train_dataframe, build_test_dataframe, \
     save_database_artifacts
 from Utils import train_svm_rbf, train_random_forest, train_gaussian_nb, train_gradient_boost
 from LogisticRegressionMultiClass import LogisticRegressionMultiClass
 
-#Figured out way to have file path work
+# Figured out way to have file path work
 ROOT = Path(__file__).resolve().parent
 RAW = ROOT / "data" / "raw"
 PROC = ROOT / "data" / "processed"
 
-
 """**************************************************************** Parameters ***************************************************************************"""
 mfcc = False
-fcc_delta=True # <--
-chroma=False
-spectral_contrast=False
-zcr=False
-spectral_centroid=False
-spectral_bandwidth=False
-spectral_rolloff=True # <--
-rms=True # <--
-tempo=False
-n_mfcc=5 # <--
-aggregation="mean_std"
+fcc_delta = True  # <--
+chroma = False
+spectral_contrast = False  #
+zcr = False
+spectral_centroid = False  #
+spectral_bandwidth = False
+spectral_rolloff = True  # <--
+rms = True  # <--
+tempo = False  #
+n_mfcc = 5  # <--
+aggregation = "mean_std"
 
-#How far we move
-logistRegressStepSize = 0.5
-#How many iterations of training
+# How far we move
+logistRegressStepSize = 0.3
+# How many iterations of training
 logistRegressEpochs = 200
 """*******************************************************************************************************************************************************"""
 
-
-#Change these paramters to try a fuckton of different things,
+# Change these paramters to try a fuckton of different things,
 def build_database():
     """
     :return:
@@ -74,23 +73,38 @@ def train_and_compare(df_tr: pd.DataFrame):
     :param df_tr:
     :return:
     """
-    X = df_tr.drop(columns=["label","path"]).to_numpy(dtype=float)
+    X = df_tr.drop(columns=["label", "path"]).to_numpy(dtype=float)
     y_text = df_tr["label"].astype(str).to_numpy()
     le = LabelEncoder().fit(y_text)
     y = le.transform(y_text)
 
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
+    # training time for each of the models
+    training_times = {}
 
-    #train comparison models
+    # train comparison models
+    start_time = time.perf_counter()
     gbm = train_gradient_boost(Xtr, ytr)
+    training_times['gbm'] = time.perf_counter() - start_time
+
+    start_time = time.perf_counter()
     svm = train_svm_rbf(Xtr, ytr)
-    rf  = train_random_forest(Xtr, ytr)
+    training_times['svm_rbf'] = time.perf_counter() - start_time
+
+    start_time = time.perf_counter()
+    rf = train_random_forest(Xtr, ytr)
+    training_times['random_forest'] = time.perf_counter() - start_time
+
+    start_time = time.perf_counter()
     gnb = train_gaussian_nb(Xtr, ytr)
+    training_times['gnb'] = time.perf_counter() - start_time
 
     # these two lines below are suspicious
+    start_time = time.perf_counter()
     lr = LogisticRegressionMultiClass(logistRegressStepSize, logistRegressEpochs)
     lr.train(Xtr, ytr)
+    training_times['lr'] = time.perf_counter() - start_time
 
     # gradient boosting machine
     pred_gbm = gbm.predict(Xte)
@@ -99,8 +113,8 @@ def train_and_compare(df_tr: pd.DataFrame):
     pred_svm = svm.predict(Xte)
     acc_svm = accuracy_score(yte, pred_svm)
     # random forest
-    pred_rf  = rf.predict(Xte)
-    acc_rf  = accuracy_score(yte, pred_rf)
+    pred_rf = rf.predict(Xte)
+    acc_rf = accuracy_score(yte, pred_rf)
     # Guassian naive bayes
     pred_gnb = gnb.predict(Xte)
     acc_gnb = accuracy_score(yte, pred_gnb)
@@ -115,6 +129,14 @@ def train_and_compare(df_tr: pd.DataFrame):
     print(f"GaussianNB         : {acc_gnb:.4f}")
     print(f"LogisticRegression : {acc_lr:.4f}")
 
+    print("\nTraining Times (seconds)")
+    print(f"GBM                : {training_times['gbm']:.4f}")
+    print(f"SVM (rbf)          : {training_times['svm_rbf']:.4f}")
+    print(f"RandomForest       : {training_times['random_forest']:.4f}")
+    print(f"GaussianNB         : {training_times['gnb']:.4f}")
+    print(f"LogisticRegression : {training_times['lr']:.4f}")
+
+
     results = {
         # "gbm": acc_gbm,
         # "svm_rbf": acc_svm,
@@ -123,8 +145,6 @@ def train_and_compare(df_tr: pd.DataFrame):
         "lr": acc_lr,
     }
 
-    #Just added this for testing purposes we will return the
-    # results = {"svm_rbf": acc_svm, "random_forest": acc_rf, "gaussian_nb": acc_gnb, "lr": acc_lr}
     best_name = max(results, key=results.get)
     if best_name == "svm_rbf":
         best_model = ("svm_rbf", svm)
