@@ -38,16 +38,20 @@ Contains training wrappers for standard models SVM, Random Forest, Gaussian Naiv
 
 
 ### LogisticRegressionMultiClass.py
+The main implementation of the Logistic Regression model
+
+Contains methods train and predict that handle the grunt work of the actual logistic regression model.
+
 
 
 ## Contributors
 - Benjamin Webster | Wrote Main.py, Database.py, Set up Utils.py
-- Gregory Ziter-Glass | Main, ...
+- Gregory Ziter-Glass | Wrote LogisticRegressionMulticlass.py and helped with parameter hypertuning
 - Jesus Aguirre | Functions, ...
 - Carly Salazar | 
 
 ## Performance
-- Final Kaggle Score:
-- Accuracy: 
+- Final Kaggle Score: 71.000
+- Accuracy: 73.389
 - Date: November 10, 2025
 
