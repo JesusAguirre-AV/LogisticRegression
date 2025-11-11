@@ -18,23 +18,23 @@ PROC = ROOT / "data" / "processed"
 
 
 """**************************************************************** Parameters ***************************************************************************"""
-mfcc = True
-fcc_delta=False
-chroma=True
-spectral_contrast=True
-zcr=True
-spectral_centroid=True
-spectral_bandwidth=True
-spectral_rolloff=True
-rms=True
+mfcc = False
+fcc_delta=True # <--
+chroma=False
+spectral_contrast=False
+zcr=False
+spectral_centroid=False
+spectral_bandwidth=False
+spectral_rolloff=True # <--
+rms=True # <--
 tempo=False
-n_mfcc=20
+n_mfcc=5 # <--
 aggregation="mean_std"
 
 #How far we move
-logistRegressStepSize = 0.1
+logistRegressStepSize = 0.5
 #How many iterations of training
-logistRegressEpochs = 300
+logistRegressEpochs = 200
 """*******************************************************************************************************************************************************"""
 
 
@@ -116,10 +116,10 @@ def train_and_compare(df_tr: pd.DataFrame):
     print(f"LogisticRegression : {acc_lr:.4f}")
 
     results = {
-        "gbm": acc_gbm,
-        "svm_rbf": acc_svm,
-        "random_forest": acc_rf,
-        "gnb": acc_gnb,
+        # "gbm": acc_gbm,
+        # "svm_rbf": acc_svm,
+        # "random_forest": acc_rf,
+        # "gnb": acc_gnb,
         "lr": acc_lr,
     }
 
